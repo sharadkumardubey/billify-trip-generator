@@ -5,7 +5,7 @@ import BillForm from "@/components/BillForm";
 import InvoicePreview from "@/components/InvoicePreview";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { generatePDF } from "@/utils/pdfGenerator";
 
 // Mock business data (in a real app, this would come from Supabase)

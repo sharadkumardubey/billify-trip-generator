@@ -1,12 +1,10 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import BusinessForm from "@/components/BusinessForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
-// Define the business data type
 interface BusinessFormData {
   businessName: string;
   businessAddress: string;
@@ -20,22 +18,18 @@ const BusinessRegistration = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Handle form submission
   const handleSubmit = (data: BusinessFormData) => {
     setIsSubmitting(true);
     
-    // Simulate API call to Supabase to store business data
     setTimeout(() => {
       console.log("Business registration data:", data);
       
-      // Show success toast
       toast.success("Business registered successfully", {
         description: "You can now generate invoices",
       });
       
       setIsSubmitting(false);
       
-      // Redirect to bill generation page
       navigate("/bill-generation");
     }, 1500);
   };
