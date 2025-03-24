@@ -4,14 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
   onSignOut?: () => void;
 }
 
-const Navbar = ({ isAuthenticated = false, onSignOut }: NavbarProps) => {
+const Navbar = ({ isAuthenticated: forcedAuth, onSignOut }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut: contextSignOut } = useAuth();
+  
+  const isAuthenticated = forcedAuth !== undefined ? forcedAuth : !!user;
+  
+  const handleSignOut = () => {
+    if (onSignOut) {
+      onSignOut();
+    } else if (contextSignOut) {
+      contextSignOut();
+    }
+    setIsMenuOpen(false);
+  };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 

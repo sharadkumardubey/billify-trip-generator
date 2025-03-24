@@ -1,54 +1,21 @@
-
-import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import AuthButton from "@/components/AuthButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText, Receipt } from "lucide-react";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hasBusinessProfile, setHasBusinessProfile] = useState(false);
-
-  // Mock sign-in function
-  const handleSignIn = () => {
-    setIsLoading(true);
-    
-    // Simulate API call to Supabase
-    setTimeout(() => {
-      setIsAuthenticated(true);
-      
-      // Simulate checking if user has business profile
-      // In real app, this would come from Supabase
-      setHasBusinessProfile(false);
-      
-      setIsLoading(false);
-      
-      toast.success("Successfully signed in", {
-        description: "Welcome to Billify",
-      });
-    }, 1500);
-  };
-
-  // Mock sign-out function
-  const handleSignOut = () => {
-    setIsAuthenticated(false);
-    setHasBusinessProfile(false);
-    
-    toast.info("Signed out successfully", {
-      description: "You have been logged out",
-    });
-  };
+  const { user, userHasBusinessProfile, loading, signOut } = useAuth();
 
   // If authenticated and has business profile, show dashboard
-  if (isAuthenticated && hasBusinessProfile) {
+  if (user && userHasBusinessProfile) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
+        <Navbar isAuthenticated={true} onSignOut={signOut} />
         
         <main className="pt-24 px-6 pb-20">
           <div className="max-w-7xl mx-auto">
@@ -185,7 +152,7 @@ const Dashboard = () => {
   }
   
   // If authenticated but no business profile, redirect to registration
-  if (isAuthenticated && !hasBusinessProfile) {
+  if (user && !userHasBusinessProfile) {
     return <Navigate to="/business-registration" />;
   }
 
@@ -204,7 +171,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <AuthButton onClick={handleSignIn} isLoading={isLoading} />
+              <AuthButton isLoading={loading} />
               
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">

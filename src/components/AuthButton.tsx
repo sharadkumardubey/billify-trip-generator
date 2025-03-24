@@ -1,15 +1,28 @@
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   isLoading?: boolean;
 }
 
-const AuthButton = ({ onClick, isLoading = false }: AuthButtonProps) => {
+const AuthButton = ({ onClick, isLoading: forcedLoading }: AuthButtonProps) => {
+  const { signInWithGoogle, loading } = useAuth();
+  
+  const isLoading = forcedLoading || loading;
+  
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      signInWithGoogle();
+    }
+  };
+  
   return (
     <Button 
-      onClick={onClick} 
+      onClick={handleClick} 
       disabled={isLoading}
       className="w-full flex items-center justify-center gap-2 py-6 rounded-lg animate-fade-in transition-all hover:shadow-lg"
     >

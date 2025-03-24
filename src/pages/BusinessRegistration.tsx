@@ -1,9 +1,12 @@
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import BusinessForm from "@/components/BusinessForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 interface BusinessFormData {
   businessName: string;
@@ -17,26 +20,55 @@ interface BusinessFormData {
 const BusinessRegistration = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { user, userHasBusinessProfile, signOut } = useAuth();
 
-  const handleSubmit = (data: BusinessFormData) => {
+  // Redirect if not logged in
+  if (!user) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  // Redirect if already has business profile
+  if (userHasBusinessProfile) {
+    return <Navigate to="/bill-generation" />;
+  }
+
+  const handleSubmit = async (data: BusinessFormData) => {
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      console.log("Business registration data:", data);
+    try {
+      // Insert business data into Supabase
+      const { error } = await supabase
+        .from('businesses')
+        .insert({
+          user_id: user.id,
+          business_name: data.businessName,
+          business_address: data.businessAddress,
+          gst_number: data.gstNumber,
+          proprietor_name: data.proprietorName,
+          contact_number: data.contactNumber,
+          email: data.email
+        });
+      
+      if (error) throw error;
       
       toast.success("Business registered successfully", {
         description: "You can now generate invoices",
       });
       
-      setIsSubmitting(false);
-      
       navigate("/bill-generation");
-    }, 1500);
+    } catch (error) {
+      console.error("Error saving business data:", error);
+      toast.error("Failed to register business", {
+        description: "Please try again later",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isAuthenticated={true} />
+      <Navbar isAuthenticated={true} onSignOut={signOut} />
       
       <main className="pt-24 px-6 pb-20">
         <div className="max-w-3xl mx-auto">
