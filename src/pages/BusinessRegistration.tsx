@@ -24,20 +24,25 @@ const BusinessRegistration = () => {
 
   // Redirect if not logged in
   if (!user) {
+    console.log("No user found, redirecting to dashboard");
     return <Navigate to="/dashboard" />;
   }
 
   // Redirect if already has business profile
   if (userHasBusinessProfile) {
+    console.log("User already has a business profile, redirecting to bill generation");
     return <Navigate to="/bill-generation" />;
   }
 
   const handleSubmit = async (data: BusinessFormData) => {
+    console.log("Business form submission started", data);
     setIsSubmitting(true);
     
     try {
+      console.log("Inserting business data for user:", user.id);
+      
       // Insert business data into Supabase
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('businesses')
         .insert({
           user_id: user.id,
@@ -47,9 +52,15 @@ const BusinessRegistration = () => {
           proprietor_name: data.proprietorName,
           contact_number: data.contactNumber,
           email: data.email
-        });
+        })
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase insert error:", error);
+        throw error;
+      }
+      
+      console.log("Business registered successfully:", insertedData);
       
       toast.success("Business registered successfully", {
         description: "You can now generate invoices",
@@ -62,6 +73,7 @@ const BusinessRegistration = () => {
         description: "Please try again later",
       });
     } finally {
+      console.log("Form submission process completed");
       setIsSubmitting(false);
     }
   };
