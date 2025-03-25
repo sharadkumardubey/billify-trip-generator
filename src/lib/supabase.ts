@@ -15,6 +15,25 @@ if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KE
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Validate the Supabase connection
+const validateSupabaseConnection = async () => {
+  try {
+    const { error } = await supabase.from('businesses').select('count', { count: 'exact', head: true });
+    if (error) {
+      console.error('⚠️ Supabase connection error:', error);
+      return false;
+    }
+    console.log('✅ Supabase connection validated successfully');
+    return true;
+  } catch (e) {
+    console.error('⚠️ Exception during Supabase validation:', e);
+    return false;
+  }
+};
+
+// Call the validation function
+validateSupabaseConnection();
+
 // Helper function to get the current user
 export const getCurrentUser = async () => {
   const { data: { session }, error } = await supabase.auth.getSession()

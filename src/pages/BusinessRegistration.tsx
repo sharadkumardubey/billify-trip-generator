@@ -39,10 +39,16 @@ const BusinessRegistration = () => {
     setIsSubmitting(true);
     
     try {
+      if (!user?.id) {
+        console.error("User ID is undefined or null");
+        throw new Error("User is not properly authenticated");
+      }
+
       console.log("Inserting business data for user:", user.id);
       
-      // Insert business data into Supabase
-      const { data: insertedData, error } = await supabase
+      // Insert business data into Supabase with better error handling
+      console.log("About to call Supabase insert...");
+      const insertResult = await supabase
         .from('businesses')
         .insert({
           user_id: user.id,
@@ -55,12 +61,14 @@ const BusinessRegistration = () => {
         })
         .select();
       
-      if (error) {
-        console.error("Supabase insert error:", error);
-        throw error;
+      console.log("Supabase insert completed", insertResult);
+      
+      if (insertResult.error) {
+        console.error("Supabase insert error:", insertResult.error);
+        throw insertResult.error;
       }
       
-      console.log("Business registered successfully:", insertedData);
+      console.log("Business registered successfully:", insertResult.data);
       
       toast.success("Business registered successfully", {
         description: "You can now generate invoices",
@@ -69,8 +77,24 @@ const BusinessRegistration = () => {
       navigate("/bill-generation");
     } catch (error) {
       console.error("Error saving business data:", error);
+      
+      // More specific error messages based on type
+      let errorMessage = "Please try again later";
+      if (typeof error === 'object' && error !== null) {
+        const err = error as any;
+        if (err.code === '23505') {
+          errorMessage = "A business profile already exists for this user";
+        } else if (err.code === '42P01') {
+          errorMessage = "Database table doesn't exist. Please contact support";
+        } else if (err.code === '42501') {
+          errorMessage = "Permission denied. Your account may not have access";
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+      }
+      
       toast.error("Failed to register business", {
-        description: "Please try again later",
+        description: errorMessage,
       });
     } finally {
       console.log("Form submission process completed");
