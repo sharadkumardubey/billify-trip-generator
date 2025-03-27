@@ -22,9 +22,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userHasBusinessProfile, setUserHasBusinessProfile] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
 
-  console.log('userHasBusinessProfile', userHasBusinessProfile)
-  debugger;
-
   useEffect(() => {
     // Setup the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
