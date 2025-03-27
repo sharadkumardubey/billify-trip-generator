@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,6 +20,7 @@ const BusinessRegistration = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { user, userHasBusinessProfile, signOut } = useAuth();
+  console.log(userHasBusinessProfile)
 
   // Redirect if not logged in
   if (!user) {
@@ -38,28 +38,52 @@ const BusinessRegistration = () => {
     console.log("Business form submission started", data);
     setIsSubmitting(true);
     
+    // Create an abort controller for timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     try {
       if (!user?.id) {
         console.error("User ID is undefined or null");
         throw new Error("User is not properly authenticated");
       }
 
+      // Double check if user already has a business profile
+      const { data: existingBusiness, error: checkError } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingBusiness) {
+        throw new Error("A business profile already exists for this user");
+      }
+
       console.log("Inserting business data for user:", user.id);
       
       // Insert business data into Supabase with better error handling
       console.log("About to call Supabase insert...");
-      const insertResult = await supabase
-        .from('businesses')
-        .insert({
-          user_id: user.id,
-          business_name: data.businessName,
-          business_address: data.businessAddress,
-          gst_number: data.gstNumber,
-          proprietor_name: data.proprietorName,
-          contact_number: data.contactNumber,
-          email: data.email
-        })
-        .select();
+      const insertResult = await Promise.race([
+        supabase
+          .from('businesses')
+          .insert({
+            user_id: user.id,
+            business_name: data.businessName,
+            business_address: data.businessAddress,
+            gst_number: data.gstNumber,
+            proprietor_name: data.proprietorName,
+            contact_number: data.contactNumber,
+            email: data.email
+          })
+          .select(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Operation timed out")), 10000)
+        )
+      ]) as { data: any[] | null; error: any };
       
       console.log("Supabase insert completed", insertResult);
       
@@ -80,7 +104,13 @@ const BusinessRegistration = () => {
       
       // More specific error messages based on type
       let errorMessage = "Please try again later";
-      if (typeof error === 'object' && error !== null) {
+      if (error instanceof Error) {
+        if (error.message === "Operation timed out") {
+          errorMessage = "The operation timed out. Please try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      } else if (typeof error === 'object' && error !== null) {
         const err = error as any;
         if (err.code === '23505') {
           errorMessage = "A business profile already exists for this user";
@@ -97,6 +127,7 @@ const BusinessRegistration = () => {
         description: errorMessage,
       });
     } finally {
+      clearTimeout(timeout);
       console.log("Form submission process completed");
       setIsSubmitting(false);
     }

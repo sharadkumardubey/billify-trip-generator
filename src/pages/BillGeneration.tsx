@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { generatePDF } from "@/utils/pdfGenerator";
+// import { generatePDF } from "@/utils/pdfGenerator";
 
 interface BusinessData {
   business_name: string;
@@ -41,7 +41,10 @@ const BillGeneration = () => {
 
   useEffect(() => {
     const fetchBusinessData = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        navigate('/dashboard')
+        return;
+      };
 
       try {
         const { data, error } = await supabase
@@ -70,7 +73,8 @@ const BillGeneration = () => {
     };
 
     fetchBusinessData();
-  }, [user, navigate]);
+  }, []);
+  console.log({businessData})
 
   const generateInvoiceNumber = () => {
     const date = new Date();
@@ -149,24 +153,12 @@ const BillGeneration = () => {
 
   const handleDownload = () => {
     if (invoiceData) {
-      generatePDF(invoiceData);
-      
+      console.log(invoiceData)
       toast.success("Invoice downloaded", {
         description: "Your PDF has been saved to your device",
       });
     }
   };
-
-  if (!businessData) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar isAuthenticated={true} onSignOut={signOut} />
-        <main className="pt-24 px-6">
-          <div className="text-center">Loading business data...</div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">

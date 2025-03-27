@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase, hasBusinessProfile } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { Navigate, useNavigate } from 'react-router-dom'
 
 interface AuthContextType {
   session: Session | null
@@ -20,6 +21,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [userHasBusinessProfile, setUserHasBusinessProfile] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
+
+  console.log('userHasBusinessProfile', userHasBusinessProfile)
+  debugger;
 
   useEffect(() => {
     // Setup the auth state listener
@@ -89,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign out function
   const signOut = async () => {
     try {
+      console.log('signing out')
       await supabase.auth.signOut()
       toast.info('Signed out successfully', {
         description: 'You have been logged out',

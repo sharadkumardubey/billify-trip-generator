@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Download } from "lucide-react";
+import InvoicePDFGenerator from "./InvoicePDFGenerator";
 
 interface InvoicePreviewProps {
   data: {
@@ -95,9 +97,11 @@ const InvoicePreview = ({ data, onDownload }: InvoicePreviewProps) => {
       </Card>
       
       <div className="mt-6 flex justify-center print:hidden">
-        <Button onClick={onDownload} className="gap-2">
-          <Download className="h-4 w-4" />
-          Download PDF
+      <Button onClick={onDownload} className="gap-2">
+      <Download className="h-4 w-4" />
+      <PDFDownloadLink document={<InvoicePDFGenerator data={data} />} fileName={`Invoice_${data.invoice_number}.pdf`}>
+        {({ loading }) => <button>{loading ? "Generating PDF..." : "Download PDF"}</button>}
+      </PDFDownloadLink>
         </Button>
       </div>
     </div>

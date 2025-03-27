@@ -57,7 +57,7 @@ const Navbar = ({ isAuthenticated: forcedAuth, onSignOut }: NavbarProps) => {
             About
           </Link>
           {isAuthenticated ? (
-            <Button variant="outline" onClick={onSignOut}>
+            <Button variant="outline" onClick={handleSignOut}>
               Sign Out
             </Button>
           ) : (
@@ -92,7 +92,7 @@ const Navbar = ({ isAuthenticated: forcedAuth, onSignOut }: NavbarProps) => {
             <Link
               to="/dashboard"
               className="text-lg py-3 border-b border-muted"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={() => setIsMenuOpen(false)}  
             >
               Dashboard
             </Link>
@@ -113,7 +113,7 @@ const Navbar = ({ isAuthenticated: forcedAuth, onSignOut }: NavbarProps) => {
           About
         </Link>
         {isAuthenticated ? (
-          <Button variant="outline" onClick={onSignOut} className="mt-4">
+          <Button variant="outline" onClick={handleSignOut} className="mt-4">
             Sign Out
           </Button>
         ) : (

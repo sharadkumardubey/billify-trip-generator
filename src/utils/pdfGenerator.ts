@@ -1,115 +1,180 @@
-import { jsPDF } from "jspdf";
-import "jspdf-autotable/dist/jspdf.plugin.autotable";
+import React from "react";
+import { Page, Text, View, Document, StyleSheet, PDFDownloadLink, Font } from "@react-pdf/renderer";
+import { Style } from "@react-pdf/types";
 
-declare module "jspdf" {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
+// Register Helvetica font (it's built into PDF)
+Font.register({
+  family: 'Helvetica',
+  fonts: [
+    { src: 'Helvetica', fontWeight: 400 },
+    { src: 'Helvetica-Bold', fontWeight: 700 }
+  ]
+});
+
+interface InvoiceData {
+  invoice_number: string;
+  invoice_date: string;
+  business_name: string;
+  business_address: string;
+  gst_number: string;
+  proprietor_name: string;
+  contact_number: string;
+  business_email: string;
+  customer_name: string;
+  customer_phone: string;
+  distance_km: number;
+  price_per_km: number;
+  base_amount: number;
+  gst_percentage: number;
+  gst_amount: number;
+  total_amount: number;
+  from_location: string;
+  to_location: string;
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
+interface RenderProps {
+  blob?: Blob;
+  url?: string;
+  loading: boolean;
+  error?: Error;
+}
 
-export const generatePDF = (invoiceData: any): void => {
-  // Initialize PDF
-  const doc = new jsPDF();
-  
-  // Format date
-  
-  // Set font
-  doc.setFont("helvetica");
-  
-  // Add business logo/title
-  doc.setFontSize(20);
-  doc.setTextColor(0, 0, 0);
-  doc.text(invoiceData.business_name, 20, 20);
-  
-  // Add business address
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  const addressLines = doc.splitTextToSize(invoiceData.business_address, 100);
-  doc.text(addressLines, 20, 30);
-  
-  // Add GST number
-  doc.setFontSize(10);
-  doc.text(`GST No: ${invoiceData.gst_number}`, 20, 45);
-  
-  // Add invoice title and details
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0);
-  doc.text("TAX INVOICE", 150, 20, { align: "right" });
-  
-  doc.setFontSize(10);
-  doc.text(`Invoice No: ${invoiceData.invoice_number}`, 150, 30, { align: "right" });
-  doc.text(`Date: ${formatDate(invoiceData.created_at)}`, 150, 35, { align: "right" });
-  
-  // Add line
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, 50, 190, 50);
-  
-  // Add customer details
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.text("Customer Details:", 20, 60);
-  
-  doc.setFontSize(10);
-  doc.text(`Name: ${invoiceData.customer_name}`, 20, 70);
-  doc.text(`Phone: ${invoiceData.customer_number}`, 120, 70);
-  
-  // Add line
-  doc.line(20, 75, 190, 75);
-  
-  // Add travel details
-  doc.setFontSize(12);
-  doc.text("Travel Details:", 20, 85);
-  
-  doc.setFontSize(10);
-  doc.text(`From: ${invoiceData.fromLocation}`, 20, 95);
-  doc.text(`To: ${invoiceData.toLocation}`, 120, 95);
-  doc.text(`Distance: ${invoiceData.distance_km} KM`, 20, 105);
-  doc.text(`Price: ₹ ${Number(invoiceData.price_per_km.toFixed(2))}`, 120, 105);
-  
-  // Add calculation table
-  doc.autoTable({
-    startY: 115,
-    head: [["Description", "Amount (₹)"]],
-    body: [
-      [`Base Fare (₹${invoiceData.price_per_km})`, invoiceData.base_amount.toFixed(2)],
-      [`GST @ ${invoiceData.gst_percentage}%`, invoiceData.gst_amount.toFixed(2)],
-      ["Total Amount", invoiceData.total_amount.toFixed(2)],
-    ],
-    headStyles: { fillColor: [66, 135, 245] },
-    foot: [["Total Amount", invoiceData.total_amount.toFixed(2)]],
-    footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-    theme: 'grid',
-    styles: { halign: 'left' },
-    columnStyles: { 1: { halign: 'right' } },
-  });
-  
-  // Add terms and conditions
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-  
-  doc.setFontSize(11);
-  doc.text("Terms & Conditions:", 20, finalY);
-  
-  doc.setFontSize(9);
-  doc.text("1. Payment is due upon receipt of invoice.", 25, finalY + 10);
-  doc.text("2. This is a computer-generated invoice and does not require a signature.", 25, finalY + 15);
-  doc.text("3. Please quote invoice number for all correspondences.", 25, finalY + 20);
-  
-  // Add footer
-  doc.setFontSize(10);
-  doc.text("Thank you for your business!", 105, finalY + 30, { align: "center" });
-  doc.setFontSize(8);
-  doc.text(`For any queries, please contact: ${invoiceData.contact_number}`, 105, finalY + 35, { align: "center" });
-  doc.text(invoiceData.email, 105, finalY + 40, { align: "center" });
-  
-  // Save the PDF
-  doc.save(`Invoice_${invoiceData.invoice_number}.pdf`);
-};
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontSize: 12,
+    fontFamily: "Helvetica",
+    color: "#333",
+    backgroundColor: "#f8f8f8"
+  } as Style,
+  header: {
+    fontSize: 20,
+    fontWeight: 700,
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#222"
+  } as Style,
+  businessInfo: {
+    textAlign: "left",
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: "#ddd",
+    borderBottomStyle: "solid"
+  } as Style,
+  section: {
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 5
+  } as Style,
+  label: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#666"
+  } as Style,
+  value: {
+    fontSize: 12,
+    marginBottom: 3
+  } as Style,
+  tableHeader: {
+    backgroundColor: "#333",
+    color: "#fff",
+    padding: 5,
+    fontSize: 10,
+    fontWeight: 700
+  } as Style,
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    borderBottomStyle: "solid",
+    paddingTop: 5,
+    paddingBottom: 5
+  } as Style,
+  cell: {
+    flex: 1,
+    fontSize: 12,
+    textAlign: "center"
+  } as Style,
+  boldText: {
+    fontWeight: 700,
+    fontSize: 16
+  } as Style
+});
+
+const InvoicePDF: React.FC<{ data: InvoiceData }> = ({ data }) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <Text style={styles.header}>Invoice</Text>
+
+      <View style={styles.section}>
+        <Text style={styles.boldText}>{data.business_name}</Text>
+        <Text style={styles.value}>{data.business_address}</Text>
+        <Text style={styles.value}>GST No: {data.gst_number}</Text>
+        <Text style={styles.value}>Proprietor: {data.proprietor_name}</Text>
+        <Text style={styles.value}>Contact: {data.contact_number}</Text>
+        <Text style={styles.value}>Email: {data.business_email}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Invoice Number</Text>
+        <Text style={styles.value}>{data.invoice_number}</Text>
+
+        <Text style={styles.label}>Invoice Date</Text>
+        <Text style={styles.value}>{data.invoice_date}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Customer Name</Text>
+        <Text style={styles.value}>{data.customer_name}</Text>
+
+        <Text style={styles.label}>Customer Phone</Text>
+        <Text style={styles.value}>{data.customer_phone}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>From</Text>
+        <Text style={styles.value}>{data.from_location}</Text>
+
+        <Text style={styles.label}>To</Text>
+        <Text style={styles.value}>{data.to_location}</Text>
+
+        <Text style={styles.label}>Distance</Text>
+        <Text style={styles.value}>{data.distance_km} km</Text>
+
+        <Text style={styles.label}>Price per Km</Text>
+        <Text style={styles.value}>₹{data.price_per_km}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableHeader}>Description</Text>
+          <Text style={styles.tableHeader}>Amount (₹)</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.cell}>Base Amount</Text>
+          <Text style={styles.cell}>{data.base_amount.toFixed(2)}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.cell}>GST ({data.gst_percentage}%)</Text>
+          <Text style={styles.cell}>{data.gst_amount.toFixed(2)}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={[styles.cell, styles.boldText]}>Total Amount</Text>
+          <Text style={[styles.cell, styles.boldText]}>₹{data.total_amount.toFixed(2)}</Text>
+        </View>
+      </View>
+    </Page>
+  </Document>
+);
+
+export const InvoicePDFDownload: React.FC<{ data: InvoiceData }> = ({ data }) => (
+  <PDFDownloadLink document={<InvoicePDF data={data} />} fileName={`invoice-${data.invoice_number}.pdf`}>
+    {({ blob, url, loading, error }: RenderProps) => 
+      loading ? 'Generating PDF...' : 'Download Invoice'
+    }
+  </PDFDownloadLink>
+);
+
+export { InvoicePDF, type InvoiceData };

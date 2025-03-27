@@ -258,7 +258,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                   <strong>Distance:</strong> {form.getValues("distanceKm")} KM
                 </p>
                 <p>
-                  <strong>Rate:</strong> ₹ {form.getValues("pricePerKm")} per KM
+                  <strong>Rate:</strong> ₹ {form.getValues("pricePerKm")}
                 </p>
               </div>
               
