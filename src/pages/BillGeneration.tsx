@@ -1,22 +1,24 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
 import BillForm from "@/components/BillForm";
 import InvoicePreview from "@/components/InvoicePreview";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { generatePDF } from "@/utils/pdfGenerator";
 
-// Mock business data (in a real app, this would come from Supabase)
-const businessData = {
-  businessName: "Sunshine Tours & Travels",
-  businessAddress: "123 Travel Lane, Tourism City, TC 56789",
-  gstNumber: "22AAAAA0000A1Z5",
-  proprietorName: "Jane Smith",
-  contactNumber: "9876543210",
-  email: "contact@sunshinetravels.com",
-};
+interface BusinessData {
+  business_name: string;
+  business_address: string;
+  gst_number: string;
+  proprietor_name: string;
+  contact_number: string;
+  email: string;
+}
 
 interface BillFormData {
   fromLocation: string;
@@ -31,51 +33,120 @@ interface BillFormData {
 
 const BillGeneration = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [businessData, setBusinessData] = useState<BusinessData | null>(null);
+  const [invoiceData, setInvoiceData] = useState(null);
   const [activeTab, setActiveTab] = useState("form");
-  const [invoiceData, setInvoiceData] = useState<any>(null);
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
-  // Generate a random invoice number
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching business data:', error);
+          toast.error('Failed to load business data');
+          return;
+        }
+
+        if (!data) {
+          toast.error('No business profile found');
+          navigate('/business-registration');
+          return;
+        }
+
+        setBusinessData(data);
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Failed to load business data');
+      }
+    };
+
+    fetchBusinessData();
+  }, [user, navigate]);
+
   const generateInvoiceNumber = () => {
-    const prefix = "INV";
-    const timestamp = new Date().getTime().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
-    return `${prefix}-${timestamp}-${random}`;
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `INV${year}${month}${random}`;
   };
 
-  // Handle form submission
-  const handleSubmit = (data: BillFormData, totalAmount: number) => {
+  const handleSubmit = async (data: BillFormData) => {
+    if (!businessData || !user?.id) {
+      toast.error('Business data not available');
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Calculate amounts
-    const baseAmount = data.distanceKm * data.pricePerKm;
-    const gstAmount = baseAmount * (data.gstPercentage / 100);
-    
-    // Create invoice data by combining business data and form data
-    const invoiceData = {
-      ...businessData,
-      ...data,
-      invoiceNumber: generateInvoiceNumber(),
-      baseAmount,
-      gstAmount,
-      totalAmount,
-    };
-    
-    // Simulate API call to save invoice
-    setTimeout(() => {
-      console.log("Invoice data:", invoiceData);
-      setInvoiceData(invoiceData);
+    try {
+      // Calculate amounts
+    const baseAmount = Number(data.pricePerKm);
+      const gstAmount = baseAmount * (data.gstPercentage / 100);
+      const totalAmount = baseAmount + gstAmount;
       
-      // Show success toast
-      toast.success("Invoice generated successfully", {
-        description: "You can now download your invoice",
+      // Create invoice data
+      const invoiceData = {
+        user_id: user.id,
+        invoice_number: generateInvoiceNumber(),
+        invoice_date: format(new Date(), 'yyyy-MM-dd'),
+        business_name: businessData.business_name,
+        business_address: businessData.business_address,
+        gst_number: businessData.gst_number,
+        proprietor_name: businessData.proprietor_name,
+        contact_number: businessData.contact_number,
+        business_email: businessData.email,
+        customer_name: data.customerName,
+        customer_phone: data.customerPhone,
+        distance_km: data.distanceKm,
+        price_per_km: data.pricePerKm,
+        base_amount: baseAmount,
+        gst_percentage: data.gstPercentage,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
+        from_location: data.fromLocation,
+        to_location: data.toLocation,
+        created_at: new Date().toISOString()
+      };
+
+      // Save invoice to Supabase
+      const { data: savedInvoice, error } = await supabase
+        .from('invoices')
+        .insert(invoiceData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving invoice:', error);
+        throw new Error('Failed to save invoice');
+      }
+
+      console.log('Invoice saved successfully:', savedInvoice);
+      setInvoiceData(savedInvoice);
+      
+      toast.success('Invoice generated successfully', {
+        description: `Invoice number: ${invoiceData.invoice_number}`,
       });
-      
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to generate invoice', {
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    } finally {
       setIsSubmitting(false);
       setActiveTab("preview");
-    }, 1500);
+    }
   };
 
-  // Handle PDF download
   const handleDownload = () => {
     if (invoiceData) {
       generatePDF(invoiceData);
@@ -86,19 +157,30 @@ const BillGeneration = () => {
     }
   };
 
+  if (!businessData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isAuthenticated={true} onSignOut={signOut} />
+        <main className="pt-24 px-6">
+          <div className="text-center">Loading business data...</div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isAuthenticated={true} />
+      <Navbar isAuthenticated={true} onSignOut={signOut} />
       
       <main className="pt-24 px-6 pb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8 animate-fade-in">
+          <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold mb-2">Generate Invoice</h1>
             <p className="text-muted-foreground">
-              Enter trip details and create a professional invoice for your travel services
+              Fill in the trip details to generate an invoice
             </p>
           </div>
-          
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
             <TabsList className="grid grid-cols-2 w-full max-w-md mb-6">
               <TabsTrigger value="form">Trip Details</TabsTrigger>
@@ -106,7 +188,7 @@ const BillGeneration = () => {
                 Preview Invoice
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="form" className="mt-0">
               <Card className="glass">
                 <CardHeader>
@@ -120,12 +202,12 @@ const BillGeneration = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="preview" className="mt-0">
               {invoiceData && (
                 <InvoicePreview 
-                  invoiceData={invoiceData} 
-                  onDownload={handleDownload} 
+                  data={invoiceData} 
+                  onDownload={handleDownload}
                 />
               )}
             </TabsContent>

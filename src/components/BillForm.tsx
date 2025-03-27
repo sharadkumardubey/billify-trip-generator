@@ -64,7 +64,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
     const gstPercentage = form.getValues("gstPercentage");
     
     if (distance && pricePerKm) {
-      const base = distance * pricePerKm;
+      const base = Number(pricePerKm);
       const gst = base * (gstPercentage / 100);
       const total = base + gst;
       
@@ -142,7 +142,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="pricePerKm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price per KM (₹)</FormLabel>
+                    <FormLabel>Price (₹)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -237,7 +237,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Base Amount:</span>
-                  <span className="font-medium">₹ {baseAmount.toFixed(2)}</span>
+                  <span className="font-medium">₹ {baseAmount?.toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between">
