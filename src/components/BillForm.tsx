@@ -25,6 +25,7 @@ const billSchema = z.object({
   gstPercentage: z.coerce.number().min(0, "GST cannot be negative").max(28, "GST cannot exceed 28%"),
   customerName: z.string().min(2, "Customer name is required"),
   customerPhone: z.string().regex(/^[0-9]{10}$/, "Phone number must be 10 digits"),
+  carNumber: z.string().min(2, "Car number is required"),
   date: z.string(),
 });
 
@@ -50,9 +51,10 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
       toLocation: "",
       distanceKm: 0,
       pricePerKm: 0,
-      gstPercentage: 5,
+      gstPercentage: 18,
       customerName: "",
       customerPhone: "",
+      carNumber: "",
       date: currentDate,
     },
   });
@@ -90,7 +92,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="fromLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>From Location</FormLabel>
+                    <FormLabel>From Location / से (कहाँ से)</FormLabel>
                     <FormControl>
                       <Input placeholder="Delhi" {...field} />
                     </FormControl>
@@ -104,7 +106,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="toLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>To Location</FormLabel>
+                    <FormLabel>To Location / तक (कहाँ तक)</FormLabel>
                     <FormControl>
                       <Input placeholder="Agra" {...field} />
                     </FormControl>
@@ -120,7 +122,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="distanceKm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Distance (KM)</FormLabel>
+                    <FormLabel>Distance (KM) / दूरी (किमी)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -142,7 +144,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="pricePerKm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (₹)</FormLabel>
+                    <FormLabel>Price (₹) / मूल्य (₹)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -165,11 +167,11 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
               name="gstPercentage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>GST Percentage (%)</FormLabel>
+                  <FormLabel>GST Percentage (%) / जीएसटी प्रतिशत (%)</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
-                      placeholder="5" 
+                      placeholder="18" 
                       {...field}
                       onChange={(e) => {
                         field.onChange(e);
@@ -191,7 +193,7 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="customerName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer Name</FormLabel>
+                    <FormLabel>Customer Name / ग्राहक का नाम</FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -205,9 +207,22 @@ const BillForm = ({ onSubmit, isSubmitting = false }: BillFormProps) => {
                 name="customerPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer Phone</FormLabel>
+                    <FormLabel>Customer Phone / ग्राहक का फ़ोन</FormLabel>
                     <FormControl>
                       <Input placeholder="9999999999" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="carNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Car Number / कार का नंबर</FormLabel>
+                    <FormControl>
+                      <Input placeholder="UP 65 AB 1234" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

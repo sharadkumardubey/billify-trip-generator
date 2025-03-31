@@ -21,6 +21,7 @@ interface InvoiceData {
   total_amount: number;
   from_location: string;
   to_location: string;
+  car_number: string;
 }
 
 // 🎨 Modern Styling for the PDF Invoice
@@ -81,8 +82,11 @@ const InvoicePDFGenerator: React.FC<{ data: InvoiceData }> = ({ data }) => (
         <Text style={styles.label}>Distance:</Text>
         <Text style={styles.value}>{data.distance_km} km</Text>
 
-        <Text style={styles.label}>Price per Km:</Text>
+        <Text style={styles.label}>Price:</Text>
         <Text style={styles.value}>₹{data.price_per_km}</Text>
+
+        <Text style={styles.label}>Car Number:</Text>
+        <Text style={styles.value}>{data.car_number}</Text>
       </View>
 
       {/* Pricing Breakdown */}

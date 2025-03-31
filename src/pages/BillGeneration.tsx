@@ -27,6 +27,7 @@ interface BillFormData {
   gstPercentage: number;
   customerName: string;
   customerPhone: string;
+  carNumber: string;
   date: string;
 }
 
@@ -110,6 +111,7 @@ const BillGeneration = () => {
         business_email: businessData.email,
         customer_name: data.customerName,
         customer_phone: data.customerPhone,
+        car_number: data.carNumber,
         distance_km: data.distanceKm,
         price_per_km: data.pricePerKm,
         base_amount: baseAmount,

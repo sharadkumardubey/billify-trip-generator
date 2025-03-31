@@ -73,6 +73,7 @@ const InvoicePreview = ({ data, onDownload }: InvoicePreviewProps) => {
               <p><strong>To:</strong> {data.to_location}</p>
               <p><strong>Distance:</strong> {data.distance_km} km</p>
               <p><strong>Rate:</strong> ₹{data.price_per_km}/km</p>
+              <p><strong>Car Number:</strong> {data.car_number}</p>
             </div>
           </div>
           

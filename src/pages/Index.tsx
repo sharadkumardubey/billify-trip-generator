@@ -184,7 +184,7 @@ const Index = () => {
                         <h3 className="text-2xl font-semibold">Enter Trip Details</h3>
                         <p className="text-muted-foreground">
                           Fill in the details of your trip including start and end locations, 
-                          distance, price per kilometer, and GST rate.
+                          distance, price, and GST rate.
                         </p>
                         <ul className="space-y-2">
                           <li className="flex items-center gap-2">
