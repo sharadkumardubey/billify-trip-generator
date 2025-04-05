@@ -62,12 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     initializeSession()
-
-    // Cleanup the subscription
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase])
+  }, [])
 
   // Google sign-in function
   const signInWithGoogle = async () => {
@@ -98,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.info('Signed out successfully', {
         description: 'You have been logged out',
       })
+      location.reload()
     } catch (error) {
       console.error('Error signing out:', error)
       toast.error('Failed to sign out', {
