@@ -24,21 +24,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Setup the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => {
-        setSession(currentSession)
-        setUser(currentSession?.user ?? null)
+    // const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    //   async (_event, currentSession) => {
+    //     setSession(currentSession)
+    //     setUser(currentSession?.user ?? null)
         
-        if (currentSession?.user) {
-          const hasProfile = await hasBusinessProfile(currentSession.user.id)
-          setUserHasBusinessProfile(hasProfile)
-        } else {
-          setUserHasBusinessProfile(false)
-        }
+    //     if (currentSession?.user) {
+    //       const {data, error} = await supabase.from("businesses").select("*").eq("user_id", currentSession.user.id)
+    //       console.log('direct calling : ',data, error)
+    //       // const hasProfile = await hasBusinessProfile(currentSession.user.id)
+    //       const hasProfile = false;
+    //       setUserHasBusinessProfile(hasProfile)
+    //     } else {
+    //       setUserHasBusinessProfile(false)
+    //     }
         
-        setLoading(false)
-      }
-    )
+    //     setLoading(false)
+    //   }
+    // )
 
     // Initialize the session
     const initializeSession = async () => {
@@ -64,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [supabase])
 
   // Google sign-in function
   const signInWithGoogle = async () => {

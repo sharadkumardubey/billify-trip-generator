@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Check, FileText, PenTool, ReceiptText, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [active, setActive] = useState(false);
@@ -17,6 +18,15 @@ const Index = () => {
       setActive(true);
     }
   };
+
+  const { user, userHasBusinessProfile } = useAuth();
+  console.log(userHasBusinessProfile)
+
+  // Redirect if already has business profile
+  if (userHasBusinessProfile) {
+    console.log("User already has a business profile, redirecting to bill generation");
+    return <Navigate to="/bill-generation" />;
+  }
 
   // Add scroll event listener
   useState(() => {
